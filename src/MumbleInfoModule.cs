@@ -42,6 +42,7 @@ namespace Nekres.Mumble_Info
         #region Settings
 
         private SettingEntry<KeyBinding> _toggleInfoBinding;
+        private SettingEntry<ContentService.FontSize> _fontSize;
         private SettingEntry<bool>       _showCursorPosition;
         internal SettingEntry<bool> EnablePerformanceCounters;
         internal SettingEntry<bool> SwapYZAxes;
@@ -66,6 +67,10 @@ namespace Nekres.Mumble_Info
             _toggleInfoBinding = settings.DefineSetting("ToggleInfoBinding", new KeyBinding(Keys.OemPlus),
                 () => "Toggle display", 
                 () => "Toggles the display of data.");
+
+            _fontSize = settings.DefineSetting("FontSize", ContentService.FontSize.Size36,
+                () => "Font Size",
+                () => "Choose font size of the MumbleInfo overlay.");
 
             _showCursorPosition = settings.DefineSetting("ShowCursorPosition", false,
                 () => "Show cursor position",
@@ -108,6 +113,8 @@ namespace Nekres.Mumble_Info
             _toggleInfoBinding.Value.Enabled = true;
             _toggleInfoBinding.Value.Activated += OnToggleInfoBindingActivated;
             _showCursorPosition.SettingChanged += OnShowCursorPositionSettingChanged;
+            _fontSize.Value = ContentService.FontSize.Size36;
+            _fontSize.SettingChanged += OnFontSizeChangeActivated;
             Gw2Mumble.CurrentMap.MapChanged += OnMapChanged;
             Gw2Mumble.PlayerCharacter.SpecializationChanged += OnSpecializationChanged;
             GameIntegration.Gw2Instance.Gw2Closed += OnGw2Closed;
@@ -235,6 +242,19 @@ namespace Nekres.Mumble_Info
             };
         }
 
+        private void OnFontSizeChangeActivated(object o, EventArgs e)
+        {
+            if (!GameIntegration.Gw2Instance.Gw2IsRunning || Gw2Mumble.UI.IsTextInputFocused) return;
+
+            // No need to re-render the data panel, the font size will be applied next time the data panel is toggled
+            if (_dataPanel == null) return;
+
+            // Re-render data panel with chosen font size if currently enabled
+            _dataPanel.Dispose();
+            _dataPanel = null;
+            BuildDisplay();
+        }
+
         private void OnKeyPressed(object o, KeyboardEventArgs e)
         {
             if (_cursorPos == null || Input.Mouse.CameraDragging || e.Key != Keys.LeftAlt) return;
@@ -251,7 +271,7 @@ namespace Nekres.Mumble_Info
 
         private void BuildDisplay() {
             _dataPanel?.Dispose();
-            _dataPanel = new DataPanel() {
+            _dataPanel = new DataPanel(_fontSize.Value) {
                 Parent = Graphics.SpriteScreen,
                 Size = new Point(Graphics.SpriteScreen.Width, Graphics.SpriteScreen.Height),
                 Location = new Point(0,0),

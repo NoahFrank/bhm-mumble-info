@@ -73,8 +73,8 @@ namespace Nekres.Mumble_Info.Core.Controls
 
         #endregion
 
-        public DataPanel() {
-            _font = Content.GetFont(ContentService.FontFace.Menomonia, ContentService.FontSize.Size36, ContentService.FontStyle.Regular);
+        public DataPanel(ContentService.FontSize fontSize) {
+            _font = Content.GetFont(ContentService.FontFace.Menomonia, fontSize, ContentService.FontStyle.Regular);
 
             UpdateLocation(null, null);
             Graphics.SpriteScreen.Resized += UpdateLocation;
